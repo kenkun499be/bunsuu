@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>分数計算サイト</title>
   <style>
     body {
@@ -42,10 +43,13 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      flex-wrap: wrap;
     }
     .input-section {
       display: flex;
+      flex-direction: row;
       align-items: center;
+      flex-wrap: wrap;
     }
     input[type="number"] {
       width: 80px;
@@ -56,6 +60,7 @@
       padding: 5px;
       font-size: 20px;
       background-color: #fff;
+      margin: 5px;
     }
     .line {
       border-top: 2px solid #ff69b4;
@@ -89,31 +94,62 @@
       color: red;
       margin-top: 10px;
     }
+
+    @media screen and (max-width: 600px) {
+      .problem {
+        font-size: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      input[type="number"] {
+        width: 60px;
+        height: 36px;
+        font-size: 18px;
+      }
+      .line {
+        width: 60px;
+      }
+      .fraction {
+        font-size: 18px;
+        margin: 5px 0;
+      }
+      .input-section {
+        flex-direction: column;
+        align-items: center;
+      }
+      #homeButton {
+        font-size: 14px;
+        padding: 6px 12px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="setup">
-    <h2>問題設定</h2>
-    <label>分子の範囲: <input type="number" id="numeratorMin" value="1"> 〜 <input type="number" id="numeratorMax" value="9"></label>
-    <label>分母の範囲: <input type="number" id="denominatorMin" value="1"> 〜 <input type="number" id="denominatorMax" value="9"></label>
-    <label>演算子:<br>
-      <input type="checkbox" id="add" checked> 足し算<br>
-      <input type="checkbox" id="subtract" checked> 引き算<br>
-      <input type="checkbox" id="multiply"> 掛け算<br>
-      <input type="checkbox" id="divide"> 割り算
-    </label>
-    <div id="error"></div>
+  <div id="settings">
+    <h2>分数問題の設定</h2>
+    <label>分子の最小値: <input type="number" id="minNumerator"></label>
+    <label>分子の最大値: <input type="number" id="maxNumerator"></label>
+    <label>分母の最小値: <input type="number" id="minDenominator"></label>
+    <label>分母の最大値: <input type="number" id="maxDenominator"></label>
+    <fieldset>
+      <legend>出題される演算（複数選択可）:</legend>
+      <label><input type="checkbox" value="+" class="operation"> 足し算</label>
+      <label><input type="checkbox" value="-" class="operation"> 引き算</label>
+      <label><input type="checkbox" value="*" class="operation"> 掛け算</label>
+      <label><input type="checkbox" value="/" class="operation"> 割り算</label>
+    </fieldset>
     <button onclick="startQuiz()">開始</button>
+    <div id="error"></div>
   </div>
 
   <div id="quiz" class="hidden">
     <button id="homeButton" onclick="goHome()">ホーム</button>
-    <div class="problem" id="problemText" style="text-align: left;"></div>
+    <div class="problem" id="problem"></div>
     <div class="input-section">
       <div class="fraction-input">
-        <input type="number" id="answerNumerator">
+        <input type="number" id="answerNumerator" placeholder="分子">
         <div class="line"></div>
-        <input type="number" id="answerDenominator">
+        <input type="number" id="answerDenominator" placeholder="分母">
       </div>
       <button onclick="checkAnswer()">確定</button>
     </div>
@@ -121,124 +157,108 @@
   </div>
 
   <script>
-    let currentAnswer;
-
-    function getRandomNonZeroInt(min, max) {
-      let num;
-      do {
-        num = Math.floor(Math.random() * (max - min + 1)) + min;
-      } while (num === 0);
-      return num;
-    }
-
-    function validateRange(value, defaultValue) {
-      return isNaN(value) ? defaultValue : value;
-    }
-
-    function generateFractionHTML(numerator, denominator) {
-      return `<div class="fraction"><div>${numerator}</div><div class="line"></div><div>${denominator}</div></div>`;
-    }
-
-    function generateProblem() {
-      let numeratorMin = validateRange(parseInt(document.getElementById('numeratorMin').value), 1);
-      let numeratorMax = validateRange(parseInt(document.getElementById('numeratorMax').value), 10);
-      let denominatorMin = validateRange(parseInt(document.getElementById('denominatorMin').value), 1);
-      let denominatorMax = validateRange(parseInt(document.getElementById('denominatorMax').value), 10);
-
-      if (numeratorMin === 0 && numeratorMax === 0) {
-        numeratorMin = 1;
-        numeratorMax = 10;
-      }
-      if (denominatorMin === 0 && denominatorMax === 0) {
-        denominatorMin = 1;
-        denominatorMax = 10;
-      }
-
-      const operations = [];
-      if (document.getElementById('add').checked) operations.push('+');
-      if (document.getElementById('subtract').checked) operations.push('-');
-      if (document.getElementById('multiply').checked) operations.push('*');
-      if (document.getElementById('divide').checked) operations.push('/');
-
-      const op = operations[Math.floor(Math.random() * operations.length)];
-
-      let aNum = getRandomNonZeroInt(numeratorMin, numeratorMax);
-      let aDen = getRandomNonZeroInt(denominatorMin, denominatorMax);
-      let bNum = getRandomNonZeroInt(numeratorMin, numeratorMax);
-      let bDen = getRandomNonZeroInt(denominatorMin, denominatorMax);
-
-      const opDisplay = { '+': '+', '-': '−', '*': '×', '/': '÷' }[op];
-
-      const problemHTML = `
-        ${generateFractionHTML(aNum, aDen)}
-        <div style="margin: 0 10px; font-size: 20px;">${opDisplay}</div>
-        ${generateFractionHTML(bNum, bDen)}
-      `;
-      document.getElementById('problemText').innerHTML = problemHTML;
-
-      currentAnswer = calculateFractionAnswer(aNum, aDen, bNum, bDen, op);
-    }
-
-    function calculateFractionAnswer(aNum, aDen, bNum, bDen, op) {
-      let num, den;
-      switch(op) {
-        case '+':
-          num = aNum * bDen + bNum * aDen;
-          den = aDen * bDen;
-          break;
-        case '-':
-          num = aNum * bDen - bNum * aDen;
-          den = aDen * bDen;
-          break;
-        case '*':
-          num = aNum * bNum;
-          den = aDen * bDen;
-          break;
-        case '/':
-          num = aNum * bDen;
-          den = aDen * bNum;
-          break;
-      }
-      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-      let g = gcd(Math.abs(num), Math.abs(den));
-      return [num / g, den / g];
-    }
+    let currentAnswer = { numerator: 1, denominator: 1 };
 
     function startQuiz() {
-      const errorDiv = document.getElementById('error');
-      errorDiv.textContent = '';
+      const minNum = parseInt(document.getElementById('minNumerator').value) || 1;
+      const maxNum = parseInt(document.getElementById('maxNumerator').value) || 10;
+      const minDen = parseInt(document.getElementById('minDenominator').value) || 1;
+      const maxDen = parseInt(document.getElementById('maxDenominator').value) || 10;
 
-      const isAnyChecked = document.getElementById('add').checked ||
-                           document.getElementById('subtract').checked ||
-                           document.getElementById('multiply').checked ||
-                           document.getElementById('divide').checked;
-
-      if (!isAnyChecked) {
-        errorDiv.textContent = '少なくとも1つの演算子を選択してください。';
+      const operations = Array.from(document.querySelectorAll('.operation:checked')).map(cb => cb.value);
+      if (operations.length === 0) {
+        document.getElementById('error').textContent = '少なくとも1つの演算を選んでください。';
         return;
       }
+      document.getElementById('error').textContent = '';
 
-      document.getElementById('setup').classList.add('hidden');
+      const num1 = getRandom(minNum, maxNum);
+      const den1 = getRandom(minDen, maxDen);
+      const num2 = getRandom(minNum, maxNum);
+      const den2 = getRandom(minDen, maxDen);
+      const op = operations[Math.floor(Math.random() * operations.length)];
+
+      const displayOp = { '+': '+', '-': '-', '*': '×', '/': '÷' }[op];
+
+      const problemText = `
+        <div class="fraction">
+          <div>${num1}</div>
+          <div class="line"></div>
+          <div>${den1}</div>
+        </div>
+        <span style="margin: 0 10px;">${displayOp}</span>
+        <div class="fraction">
+          <div>${num2}</div>
+          <div class="line"></div>
+          <div>${den2}</div>
+        </div>
+      `;
+
+      document.getElementById('problem').innerHTML = problemText;
+      document.getElementById('settings').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
-      generateProblem();
+
+      currentAnswer = calculateAnswer(num1, den1, num2, den2, op);
     }
 
-    function goHome() {
-      document.getElementById('quiz').classList.add('hidden');
-      document.getElementById('setup').classList.remove('hidden');
-      document.getElementById('result').textContent = '';
-      document.getElementById('error').textContent = '';
+    function getRandom(min, max) {
+      let value;
+      do {
+        value = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (value === 0);
+      return value;
+    }
+
+    function calculateAnswer(n1, d1, n2, d2, op) {
+      let num, den;
+      switch (op) {
+        case '+':
+          num = n1 * d2 + n2 * d1;
+          den = d1 * d2;
+          break;
+        case '-':
+          num = n1 * d2 - n2 * d1;
+          den = d1 * d2;
+          break;
+        case '*':
+          num = n1 * n2;
+          den = d1 * d2;
+          break;
+        case '/':
+          num = n1 * d2;
+          den = d1 * n2;
+          break;
+      }
+      return simplifyFraction(num, den);
+    }
+
+    function simplifyFraction(numerator, denominator) {
+      const gcd = (a, b) => b ? gcd(b, a % b) : a;
+      const g = gcd(Math.abs(numerator), Math.abs(denominator));
+      return { numerator: numerator / g, denominator: denominator / g };
     }
 
     function checkAnswer() {
       const userNum = parseInt(document.getElementById('answerNumerator').value);
       const userDen = parseInt(document.getElementById('answerDenominator').value);
-
-      if (userNum === currentAnswer[0] && userDen === currentAnswer[1]) {
-        document.getElementById('result').textContent = '正解です！';
-      } else {
-        document.getElementById('result').textContent = `不正解です。正解は ${currentAnswer[0]}/${currentAnswer[1]} です。`;
+      if (!userNum || !userDen) {
+        document.getElementById('result').textContent = '答えを入力してください。';
+        return;
       }
+      const user = simplifyFraction(userNum, userDen);
+      if (user.numerator === currentAnswer.numerator && user.denominator === currentAnswer.denominator) {
+        document.getElementById('result').textContent = '正解！';
+      } else {
+        document.getElementById('result').textContent = `不正解。正解は ${currentAnswer.numerator}/${currentAnswer.denominator} です。`;
+      }
+    }
+
+    function goHome() {
+      document.getElementById('quiz').classList.add('hidden');
+      document.getElementById('settings').classList.remove('hidden');
+      document.getElementById('result').textContent = '';
+      document.getElementById('answerNumerator').value = '';
+      document.getElementById('answerDenominator').value = '';
     }
   </script>
 </body>
