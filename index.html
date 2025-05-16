@@ -85,6 +85,10 @@
       right: 10px;
       background-color: #ffb3e6;
     }
+    #error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -98,6 +102,7 @@
       <input type="checkbox" id="multiply"> 掛け算<br>
       <input type="checkbox" id="divide"> 割り算
     </label>
+    <div id="error"></div>
     <button onclick="startQuiz()">開始</button>
   </div>
 
@@ -183,6 +188,19 @@
     }
 
     function startQuiz() {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = '';
+
+      const isAnyChecked = document.getElementById('add').checked ||
+                           document.getElementById('subtract').checked ||
+                           document.getElementById('multiply').checked ||
+                           document.getElementById('divide').checked;
+
+      if (!isAnyChecked) {
+        errorDiv.textContent = '少なくとも1つの演算子を選択してください。';
+        return;
+      }
+
       document.getElementById('setup').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
       generateProblem();
@@ -192,6 +210,7 @@
       document.getElementById('quiz').classList.add('hidden');
       document.getElementById('setup').classList.remove('hidden');
       document.getElementById('result').textContent = '';
+      document.getElementById('error').textContent = '';
     }
 
     function checkAnswer() {
