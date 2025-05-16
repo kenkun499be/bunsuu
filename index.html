@@ -123,8 +123,16 @@
   <script>
     let currentAnswer;
 
-    function getRandomInt(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+    function getRandomNonZeroInt(min, max) {
+      let num;
+      do {
+        num = Math.floor(Math.random() * (max - min + 1)) + min;
+      } while (num === 0);
+      return num;
+    }
+
+    function validateRange(value, defaultValue) {
+      return isNaN(value) ? defaultValue : value;
     }
 
     function generateFractionHTML(numerator, denominator) {
@@ -132,10 +140,19 @@
     }
 
     function generateProblem() {
-      const numeratorMin = parseInt(document.getElementById('numeratorMin').value);
-      const numeratorMax = parseInt(document.getElementById('numeratorMax').value);
-      const denominatorMin = parseInt(document.getElementById('denominatorMin').value);
-      const denominatorMax = parseInt(document.getElementById('denominatorMax').value);
+      let numeratorMin = validateRange(parseInt(document.getElementById('numeratorMin').value), 1);
+      let numeratorMax = validateRange(parseInt(document.getElementById('numeratorMax').value), 10);
+      let denominatorMin = validateRange(parseInt(document.getElementById('denominatorMin').value), 1);
+      let denominatorMax = validateRange(parseInt(document.getElementById('denominatorMax').value), 10);
+
+      if (numeratorMin === 0 && numeratorMax === 0) {
+        numeratorMin = 1;
+        numeratorMax = 10;
+      }
+      if (denominatorMin === 0 && denominatorMax === 0) {
+        denominatorMin = 1;
+        denominatorMax = 10;
+      }
 
       const operations = [];
       if (document.getElementById('add').checked) operations.push('+');
@@ -145,10 +162,10 @@
 
       const op = operations[Math.floor(Math.random() * operations.length)];
 
-      let aNum = getRandomInt(numeratorMin, numeratorMax);
-      let aDen = getRandomInt(denominatorMin, denominatorMax);
-      let bNum = getRandomInt(numeratorMin, numeratorMax);
-      let bDen = getRandomInt(denominatorMin, denominatorMax);
+      let aNum = getRandomNonZeroInt(numeratorMin, numeratorMax);
+      let aDen = getRandomNonZeroInt(denominatorMin, denominatorMax);
+      let bNum = getRandomNonZeroInt(numeratorMin, numeratorMax);
+      let bDen = getRandomNonZeroInt(denominatorMin, denominatorMax);
 
       const opDisplay = { '+': '+', '-': '−', '*': '×', '/': '÷' }[op];
 
