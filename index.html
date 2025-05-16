@@ -82,14 +82,12 @@
     #homeButton {
       position: absolute;
       top: 10px;
-      left: 10px;
+      right: 10px;
       background-color: #ffb3e6;
     }
   </style>
 </head>
 <body>
-  <button id="homeButton" onclick="goHome()">ホーム</button>
-
   <div id="setup">
     <h2>問題設定</h2>
     <label>分子の範囲: <input type="number" id="numeratorMin" value="1"> 〜 <input type="number" id="numeratorMax" value="9"></label>
@@ -104,6 +102,7 @@
   </div>
 
   <div id="quiz" class="hidden">
+    <button id="homeButton" onclick="goHome()">ホーム</button>
     <div class="problem" id="problemText" style="text-align: left;"></div>
     <div class="input-section">
       <div class="fraction-input">
