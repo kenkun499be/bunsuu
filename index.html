@@ -323,11 +323,6 @@
       }
     }
 
-    function clearInput() {
-      document.getElementById('answerNumerator').value = '';
-      document.getElementById('answerDenominator').value = '';
-    }
-
     function goHome() {
       document.getElementById('settings').classList.remove('hidden');
       document.getElementById('quiz').classList.add('hidden');
@@ -336,80 +331,137 @@
       document.getElementById('result').textContent = '';
     }
 
-    // 全画面キャンバス設定と線描画ロジック
+    function clearInput() {
+      document.getElementById('answerNumerator').value = '';
+      document.getElementById('answerDenominator').value = '';
+    }
+
+    // --- ここからキャンバスの描画関連 ---
+
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
 
+    let lines = []; // 描画したすべての線の配列（線は座標の配列）
+    let currentLine = []; // 今描いている線
+
+    // リサイズ関数
     function resizeCanvas() {
+      // いったんサイズを変えるとキャンバスはクリアされるので
+      // サイズ変えてから、保存してある線を再描画
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      redrawLines();
     }
-    resizeCanvas();
+
+    // 線を描き直す関数
+    function redrawLines() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#ff69b4';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+
+      for (const line of lines) {
+        if (line.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(line[0].x, line[0].y);
+        for (let i = 1; i < line.length; i++) {
+          ctx.lineTo(line[i].x, line[i].y);
+        }
+        ctx.stroke();
+      }
+    }
+
     window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
     let drawing = false;
-    let lastX = 0;
-    let lastY = 0;
 
+    // マウスイベント
     canvas.addEventListener('mousedown', (e) => {
       drawing = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
+      currentLine = [{ x: e.clientX, y: e.clientY }];
     });
+
     canvas.addEventListener('mousemove', (e) => {
       if (!drawing) return;
+      const point = { x: e.clientX, y: e.clientY };
+      currentLine.push(point);
+
       ctx.strokeStyle = '#ff69b4';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
 
       ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(e.clientX, e.clientY);
+      const lastPoint = currentLine[currentLine.length - 2];
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(point.x, point.y);
       ctx.stroke();
-
-      lastX = e.clientX;
-      lastY = e.clientY;
     });
-    canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('mouseout', () => drawing = false);
 
+    canvas.addEventListener('mouseup', () => {
+      if (!drawing) return;
+      drawing = false;
+      if (currentLine.length > 1) lines.push(currentLine);
+      currentLine = [];
+    });
+
+    canvas.addEventListener('mouseout', () => {
+      if (!drawing) return;
+      drawing = false;
+      if (currentLine.length > 1) lines.push(currentLine);
+      currentLine = [];
+    });
+
+    // タッチイベント
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       const touch = e.touches[0];
-      lastX = touch.clientX;
-      lastY = touch.clientY;
       drawing = true;
+      currentLine = [{ x: touch.clientX, y: touch.clientY }];
     });
+
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       if (!drawing) return;
       const touch = e.touches[0];
+      const point = { x: touch.clientX, y: touch.clientY };
+      currentLine.push(point);
 
       ctx.strokeStyle = '#ff69b4';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
 
       ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(touch.clientX, touch.clientY);
+      const lastPoint = currentLine[currentLine.length - 2];
+      ctx.moveTo(lastPoint.x, lastPoint.y);
+      ctx.lineTo(point.x, point.y);
       ctx.stroke();
-
-      lastX = touch.clientX;
-      lastY = touch.clientY;
     });
+
     canvas.addEventListener('touchend', (e) => {
       e.preventDefault();
+      if (!drawing) return;
       drawing = false;
+      if (currentLine.length > 1) lines.push(currentLine);
+      currentLine = [];
     });
+
     canvas.addEventListener('touchcancel', (e) => {
       e.preventDefault();
+      if (!drawing) return;
       drawing = false;
+      if (currentLine.length > 1) lines.push(currentLine);
+      currentLine = [];
     });
 
+    // リセット関数
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      lines = [];
+      currentLine = [];
     }
 
+    // リセットボタン用
     function resetDrawing() {
       clearCanvas();
       clearInput();
