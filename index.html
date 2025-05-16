@@ -127,10 +127,8 @@
 <body>
   <div id="settings">
     <h2>分数問題の設定</h2>
-    <label>分子の最小値: <input type="number" id="minNumerator"></label>
-    <label>分子の最大値: <input type="number" id="maxNumerator"></label>
-    <label>分母の最小値: <input type="number" id="minDenominator"></label>
-    <label>分母の最大値: <input type="number" id="maxDenominator"></label>
+    <label>分子の範囲: <input type="number" id="numRange1"> ～ <input type="number" id="numRange2"></label>
+    <label>分母の範囲: <input type="number" id="denRange1"> ～ <input type="number" id="denRange2"></label>
     <fieldset>
       <legend>出題される演算（複数選択可）:</legend>
       <label><input type="checkbox" value="+" class="operation"> 足し算</label>
@@ -160,10 +158,20 @@
     let currentAnswer = { numerator: 1, denominator: 1 };
 
     function startQuiz() {
-      const minNum = parseInt(document.getElementById('minNumerator').value) || 1;
-      const maxNum = parseInt(document.getElementById('maxNumerator').value) || 10;
-      const minDen = parseInt(document.getElementById('minDenominator').value) || 1;
-      const maxDen = parseInt(document.getElementById('maxDenominator').value) || 10;
+      let minNum = parseInt(document.getElementById('numRange1').value);
+      let maxNum = parseInt(document.getElementById('numRange2').value);
+      let minDen = parseInt(document.getElementById('denRange1').value);
+      let maxDen = parseInt(document.getElementById('denRange2').value);
+
+      if (isNaN(minNum) || isNaN(maxNum)) {
+        minNum = 1; maxNum = 10;
+      }
+      if (isNaN(minDen) || isNaN(maxDen)) {
+        minDen = 1; maxDen = 10;
+      }
+
+      if (minNum > maxNum) [minNum, maxNum] = [maxNum, minNum];
+      if (minDen > maxDen) [minDen, maxDen] = [maxDen, minDen];
 
       const operations = Array.from(document.querySelectorAll('.operation:checked')).map(cb => cb.value);
       if (operations.length === 0) {
