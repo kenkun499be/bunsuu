@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>分数の計算</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    .fraction-input {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 10px;
+    }
+    .problem {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .input-section {
+      display: flex;
+      align-items: center;
+    }
+    input[type="number"] {
+      width: 60px;
+      text-align: center;
+    }
+    .line {
+      border-top: 2px solid black;
+      width: 60px;
+      margin: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="setup">
+    <h2>問題設定</h2>
+    <label>分子の範囲: <input type="number" id="numeratorMin" value="1"> 〜 <input type="number" id="numeratorMax" value="9"></label><br><br>
+    <label>分母の範囲: <input type="number" id="denominatorMin" value="1"> 〜 <input type="number" id="denominatorMax" value="9"></label><br><br>
+    <label>演算子:<br>
+      <input type="checkbox" id="add" checked> 足し算<br>
+      <input type="checkbox" id="subtract" checked> 引き算<br>
+      <input type="checkbox" id="multiply"> 掛け算<br>
+      <input type="checkbox" id="divide"> 割り算<br>
+    </label><br>
+    <button onclick="startQuiz()">開始</button>
+  </div>
+
+  <div id="quiz" class="hidden">
+    <div class="problem" id="problemText"></div>
+    <div class="input-section">
+      <div class="fraction-input">
+        <input type="number" id="answerNumerator">
+        <div class="line"></div>
+        <input type="number" id="answerDenominator">
+      </div>
+      <button onclick="checkAnswer()">確定</button>
+    </div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let currentAnswer;
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateProblem() {
+      const numeratorMin = parseInt(document.getElementById('numeratorMin').value);
+      const numeratorMax = parseInt(document.getElementById('numeratorMax').value);
+      const denominatorMin = parseInt(document.getElementById('denominatorMin').value);
+      const denominatorMax = parseInt(document.getElementById('denominatorMax').value);
+
+      const operations = [];
+      if (document.getElementById('add').checked) operations.push('+');
+      if (document.getElementById('subtract').checked) operations.push('-');
+      if (document.getElementById('multiply').checked) operations.push('*');
+      if (document.getElementById('divide').checked) operations.push('/');
+
+      const op = operations[Math.floor(Math.random() * operations.length)];
+
+      let aNum = getRandomInt(numeratorMin, numeratorMax);
+      let aDen = getRandomInt(denominatorMin, denominatorMax);
+      let bNum = getRandomInt(numeratorMin, numeratorMax);
+      let bDen = getRandomInt(denominatorMin, denominatorMax);
+
+      document.getElementById('problemText').textContent = `${aNum}/${aDen} ${op} ${bNum}/${bDen}`;
+      currentAnswer = calculateFractionAnswer(aNum, aDen, bNum, bDen, op);
+    }
+
+    function calculateFractionAnswer(aNum, aDen, bNum, bDen, op) {
+      let num, den;
+      switch(op) {
+        case '+':
+          num = aNum * bDen + bNum * aDen;
+          den = aDen * bDen;
+          break;
+        case '-':
+          num = aNum * bDen - bNum * aDen;
+          den = aDen * bDen;
+          break;
+        case '*':
+          num = aNum * bNum;
+          den = aDen * bDen;
+          break;
+        case '/':
+          num = aNum * bDen;
+          den = aDen * bNum;
+          break;
+      }
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      let g = gcd(Math.abs(num), Math.abs(den));
+      return [num / g, den / g];
+    }
+
+    function startQuiz() {
+      document.getElementById('setup').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      generateProblem();
+    }
+
+    function checkAnswer() {
+      const userNum = parseInt(document.getElementById('answerNumerator').value);
+      const userDen = parseInt(document.getElementById('answerDenominator').value);
+
+      if (userNum === currentAnswer[0] && userDen === currentAnswer[1]) {
+        document.getElementById('result').textContent = '正解です！';
+      } else {
+        document.getElementById('result').textContent = `不正解です。正解は ${currentAnswer[0]}/${currentAnswer[1]} です。`;
+      }
+    }
+  </script>
+</body>
+</html>
