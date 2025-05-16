@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>分数の計算</title>
   <style>
     body {
@@ -10,6 +10,10 @@
       padding: 20px;
       background-color: #fff0f5;
       color: #444;
+      position: relative;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
     }
     h2 {
       color: #d6336c;
@@ -24,6 +28,8 @@
       cursor: pointer;
       margin-top: 10px;
       transition: background-color 0.3s;
+      user-select: none;
+      z-index: 1100;
     }
     button:hover {
       background-color: #ff7cd6;
@@ -50,7 +56,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
     input[type="number"] {
       width: 80px;
@@ -62,6 +68,7 @@
       font-size: 20px;
       background-color: #fff;
       margin: 5px;
+      z-index: 1100;
     }
     .line {
       border-top: 2px solid #ff69b4;
@@ -85,63 +92,96 @@
       color: #d6336c;
       font-weight: bold;
     }
-    #homeButton {
+
+    /* ホームボタンとリセットボタン */
+    #homeButton, #resetButton {
       position: absolute;
       top: 10px;
-      right: 10px;
       background-color: #ffb3e6;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-family: 'Rounded Mplus 1c', sans-serif;
+      user-select: none;
+      z-index: 1100;
     }
-    #error {
-      color: red;
-      margin-top: 10px;
+    #homeButton:hover, #resetButton:hover {
+      background-color: #ff7cd6;
+    }
+    #homeButton {
+      right: 10px;
+    }
+    #resetButton {
+      right: 90px;
     }
 
+    /* 描画キャンバスを全画面化 */
+    #drawingCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      border-radius: 0;
+      z-index: 1000; /* ボタンより下に */
+      touch-action: none; /* スマホでスムーズに描画 */
+      background: transparent;
+    }
+
+    /* スマホ対応 */
     @media screen and (max-width: 600px) {
-  .problem {
-    font-size: 20px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  input[type="number"] {
-    width: 60px;
-    height: 36px;
-    font-size: 18px;
-  }
-  .line {
-    width: 60px;
-  }
-  .fraction {
-    font-size: 18px;
-    margin: 5px;
-  }
-  .input-section {
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    flex-wrap: nowrap;
-  }
-  .fraction-input {
-    margin-right: 10px;
-  }
-  #homeButton {
-    font-size: 14px;
-    padding: 6px 12px;
-  }
-}
-
+      .problem {
+        font-size: 20px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+      }
+      input[type="number"] {
+        width: 60px;
+        height: 36px;
+        font-size: 18px;
+      }
+      .line {
+        width: 60px;
+      }
+      .fraction {
+        font-size: 18px;
+        margin: 5px;
+      }
+      .input-section {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: nowrap;
+      }
+      .fraction-input {
+        margin-right: 10px;
+      }
+      #homeButton, #resetButton {
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+      #resetButton {
+        right: 80px;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="settings">
     <h2>問題の設定</h2>
-    <label>分子の範囲: <input type="number" id="numRange1"> ～ <input type="number" id="numRange2"></label>
-    <label>分母の範囲: <input type="number" id="denRange1"> ～ <input type="number" id="denRange2"></label>
+    <label>分子の範囲: <input type="number" id="numRange1" /> ～ <input type="number" id="numRange2" /></label>
+    <label>分母の範囲: <input type="number" id="denRange1" /> ～ <input type="number" id="denRange2" /></label>
     <fieldset>
       <legend>出題される演算（複数選択可）:</legend>
-      <label><input type="checkbox" value="+" class="operation"> 足し算</label>
-      <label><input type="checkbox" value="-" class="operation"> 引き算</label>
-      <label><input type="checkbox" value="*" class="operation"> 掛け算</label>
-      <label><input type="checkbox" value="/" class="operation"> 割り算</label>
+      <label><input type="checkbox" value="+" class="operation" /> 足し算</label>
+      <label><input type="checkbox" value="-" class="operation" /> 引き算</label>
+      <label><input type="checkbox" value="*" class="operation" /> 掛け算</label>
+      <label><input type="checkbox" value="/" class="operation" /> 割り算</label>
     </fieldset>
     <button onclick="startQuiz()">開始</button>
     <div id="error"></div>
@@ -149,15 +189,22 @@
 
   <div id="quiz" class="hidden">
     <button id="homeButton" onclick="goHome()">ホーム</button>
+    <button id="resetButton" onclick="resetDrawing()">リセット</button>
+
     <div class="problem" id="problem"></div>
+
+    <!-- 全画面キャンバス -->
+    <canvas id="drawingCanvas"></canvas>
+
     <div class="input-section">
       <div class="fraction-input">
-        <input type="number" id="answerNumerator">
+        <input type="number" id="answerNumerator" />
         <div class="line"></div>
-        <input type="number" id="answerDenominator">
+        <input type="number" id="answerDenominator" />
       </div>
       <button onclick="checkAnswer()">確定</button>
     </div>
+
     <div id="result"></div>
   </div>
 
@@ -187,12 +234,25 @@
       }
       document.getElementById('error').textContent = '';
 
-      const num1 = getRandom(minNum, maxNum);
-      const den1 = getRandom(minDen, maxDen);
-      const num2 = getRandom(minNum, maxNum);
-      const den2 = getRandom(minDen, maxDen);
-      const op = operations[Math.floor(Math.random() * operations.length)];
+      function getRandomNoZero(min, max) {
+        let v;
+        let tries = 0;
+        do {
+          v = Math.floor(Math.random() * (max - min + 1)) + min;
+          tries++;
+          if (tries > 100) {
+            return 1;
+          }
+        } while (v === 0);
+        return v;
+      }
 
+      const num1 = getRandomNoZero(minNum, maxNum);
+      const den1 = getRandomNoZero(minDen, maxDen);
+      const num2 = getRandomNoZero(minNum, maxNum);
+      const den2 = getRandomNoZero(minDen, maxDen);
+
+      const op = operations[Math.floor(Math.random() * operations.length)];
       const displayOp = { '+': '+', '-': '-', '*': '×', '/': '÷' }[op];
 
       const problemText = `
@@ -212,16 +272,11 @@
       document.getElementById('problem').innerHTML = problemText;
       document.getElementById('settings').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
+      clearCanvas();
+      clearInput();
 
       currentAnswer = calculateAnswer(num1, den1, num2, den2, op);
-    }
-
-    function getRandom(min, max) {
-      let value;
-      do {
-        value = Math.floor(Math.random() * (max - min + 1)) + min;
-      } while (value === 0);
-      return value;
+      document.getElementById('result').textContent = '';
     }
 
     function calculateAnswer(n1, d1, n2, d2, op) {
@@ -248,7 +303,7 @@
     }
 
     function simplifyFraction(numerator, denominator) {
-      const gcd = (a, b) => b ? gcd(b, a % b) : a;
+      const gcd = (a, b) => (b ? gcd(b, a % b) : a);
       const g = gcd(Math.abs(numerator), Math.abs(denominator));
       return { numerator: numerator / g, denominator: denominator / g };
     }
@@ -264,16 +319,101 @@
       if (user.numerator === currentAnswer.numerator && user.denominator === currentAnswer.denominator) {
         document.getElementById('result').textContent = '正解！';
       } else {
-        document.getElementById('result').textContent = `不正解。正解は ${currentAnswer.numerator}/${currentAnswer.denominator} です。`;
+        document.getElementById('result').textContent = `不正解。正しい答えは ${currentAnswer.numerator} / ${currentAnswer.denominator} です。`;
       }
     }
 
-    function goHome() {
-      document.getElementById('quiz').classList.add('hidden');
-      document.getElementById('settings').classList.remove('hidden');
-      document.getElementById('result').textContent = '';
+    function clearInput() {
       document.getElementById('answerNumerator').value = '';
       document.getElementById('answerDenominator').value = '';
+    }
+
+    function goHome() {
+      document.getElementById('settings').classList.remove('hidden');
+      document.getElementById('quiz').classList.add('hidden');
+      clearCanvas();
+      clearInput();
+      document.getElementById('result').textContent = '';
+    }
+
+    // 全画面キャンバス設定と線描画ロジック
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let drawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      drawing = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      ctx.strokeStyle = '#ff69b4';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(e.clientX, e.clientY);
+      ctx.stroke();
+
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseout', () => drawing = false);
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+      drawing = true;
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!drawing) return;
+      const touch = e.touches[0];
+
+      ctx.strokeStyle = '#ff69b4';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(touch.clientX, touch.clientY);
+      ctx.stroke();
+
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+    });
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      drawing = false;
+    });
+    canvas.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      drawing = false;
+    });
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function resetDrawing() {
+      clearCanvas();
+      clearInput();
+      document.getElementById('result').textContent = '';
     }
   </script>
 </body>
