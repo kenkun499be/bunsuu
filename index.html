@@ -41,24 +41,25 @@
       margin-bottom: 20px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
     }
     .input-section {
       display: flex;
       align-items: center;
     }
     input[type="number"] {
-      width: 60px;
+      width: 80px;
+      height: 40px;
       text-align: center;
       border: 2px solid #ffb6d5;
       border-radius: 8px;
       padding: 5px;
-      font-size: 16px;
+      font-size: 20px;
       background-color: #fff;
     }
     .line {
       border-top: 2px solid #ff69b4;
-      width: 60px;
+      width: 80px;
       margin: 2px 0;
     }
     .fraction {
@@ -78,9 +79,17 @@
       color: #d6336c;
       font-weight: bold;
     }
+    #homeButton {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #ffb3e6;
+    }
   </style>
 </head>
 <body>
+  <button id="homeButton" onclick="goHome()">ホーム</button>
+
   <div id="setup">
     <h2>問題設定</h2>
     <label>分子の範囲: <input type="number" id="numeratorMin" value="1"> 〜 <input type="number" id="numeratorMax" value="9"></label>
@@ -95,7 +104,7 @@
   </div>
 
   <div id="quiz" class="hidden">
-    <div class="problem" id="problemText"></div>
+    <div class="problem" id="problemText" style="text-align: left;"></div>
     <div class="input-section">
       <div class="fraction-input">
         <input type="number" id="answerNumerator">
@@ -137,9 +146,11 @@
       let bNum = getRandomInt(numeratorMin, numeratorMax);
       let bDen = getRandomInt(denominatorMin, denominatorMax);
 
+      const opDisplay = { '+': '+', '-': '−', '*': '×', '/': '÷' }[op];
+
       const problemHTML = `
         ${generateFractionHTML(aNum, aDen)}
-        <div style="margin: 0 10px; font-size: 20px;">${op}</div>
+        <div style="margin: 0 10px; font-size: 20px;">${opDisplay}</div>
         ${generateFractionHTML(bNum, bDen)}
       `;
       document.getElementById('problemText').innerHTML = problemHTML;
@@ -176,6 +187,12 @@
       document.getElementById('setup').classList.add('hidden');
       document.getElementById('quiz').classList.remove('hidden');
       generateProblem();
+    }
+
+    function goHome() {
+      document.getElementById('quiz').classList.add('hidden');
+      document.getElementById('setup').classList.remove('hidden');
+      document.getElementById('result').textContent = '';
     }
 
     function checkAnswer() {
