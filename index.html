@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>分数の計算</title>
+  <title>分数計算サイト</title>
   <style>
     body {
       font-family: sans-serif;
@@ -20,6 +20,8 @@
     .problem {
       font-size: 24px;
       margin-bottom: 20px;
+      display: flex;
+      align-items: center;
     }
     .input-section {
       display: flex;
@@ -33,6 +35,12 @@
       border-top: 2px solid black;
       width: 60px;
       margin: 2px 0;
+    }
+    .fraction {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 10px;
     }
   </style>
 </head>
@@ -70,6 +78,10 @@
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
+    function generateFractionHTML(numerator, denominator) {
+      return `<div class="fraction"><div>${numerator}</div><div class="line"></div><div>${denominator}</div></div>`;
+    }
+
     function generateProblem() {
       const numeratorMin = parseInt(document.getElementById('numeratorMin').value);
       const numeratorMax = parseInt(document.getElementById('numeratorMax').value);
@@ -89,7 +101,13 @@
       let bNum = getRandomInt(numeratorMin, numeratorMax);
       let bDen = getRandomInt(denominatorMin, denominatorMax);
 
-      document.getElementById('problemText').textContent = `${aNum}/${aDen} ${op} ${bNum}/${bDen}`;
+      const problemHTML = `
+        ${generateFractionHTML(aNum, aDen)}
+        <div>${op}</div>
+        ${generateFractionHTML(bNum, bDen)}
+      `;
+      document.getElementById('problemText').innerHTML = problemHTML;
+
       currentAnswer = calculateFractionAnswer(aNum, aDen, bNum, bDen, op);
     }
 
