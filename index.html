@@ -171,6 +171,12 @@
     }
   </style>
 </head>
+<div id="resultScreen" class="hidden">
+  <div id="summary"></div>
+  <button onclick="goHome()">ホームへ戻る</button>
+  <button onclick="nextProblem()">次の問題へ</button>
+</div>
+
 <body>
   <div id="settings">
     <h2>問題の設定</h2>
@@ -309,51 +315,73 @@
     }
 
     function checkAnswer() {
-      const userNum = parseInt(document.getElementById('answerNumerator').value);
-      const userDen = parseInt(document.getElementById('answerDenominator').value);
-      if (!userNum || !userDen) {
-        document.getElementById('result').textContent = '答えを入力してください。';
-        return;
-      }
-      const user = simplifyFraction(userNum, userDen);
-      if (user.numerator === currentAnswer.numerator && user.denominator === currentAnswer.denominator) {
-        document.getElementById('result').textContent = '正解！';
-      } else {
-        document.getElementById('result').textContent = `不正解。正しい答えは ${currentAnswer.numerator} / ${currentAnswer.denominator} です。`;
-      }
-    }
+  const userNum = parseInt(document.getElementById('answerNumerator').value);
+  const userDen = parseInt(document.getElementById('answerDenominator').value);
+  if (!userNum || !userDen) {
+    document.getElementById('result').textContent = '答えを入力してください。';
+    return;
+  }
+
+  const user = simplifyFraction(userNum, userDen);
+  const isCorrect = (user.numerator === currentAnswer.numerator && user.denominator === currentAnswer.denominator);
+
+
+  const problemHTML = document.getElementById('problem').innerHTML;
+  const yourAnswer = `${user.numerator} / ${user.denominator}`;
+  const correctAnswer = `${currentAnswer.numerator} / ${currentAnswer.denominator}`;
+
+  let summaryText = `
+    <div class="problem">${problemHTML}</div>
+    <div>正解：${correctAnswer}</div>
+    <div>あなたの回答：${yourAnswer}</div>
+    <div style="color: ${isCorrect ? '#ff558c' : '#000bdf'}; font-weight: bold;">
+      ${isCorrect ? '正解' : '不正解'}
+    </div>
+  `;
+
+  document.getElementById('summary').innerHTML = summaryText;
+
+
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('resultScreen').classList.remove('hidden');
+}
+
+function nextProblem() {
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  clearCanvas();
+  clearInput();
+  startQuiz(); 
+}
+
 
     function goHome() {
-      document.getElementById('settings').classList.remove('hidden');
-      document.getElementById('quiz').classList.add('hidden');
-      clearCanvas();
-      clearInput();
-      document.getElementById('result').textContent = '';
-    }
+  document.getElementById('settings').classList.remove('hidden');
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  clearCanvas();
+  clearInput();
+  document.getElementById('result').textContent = '';
+}
+
 
     function clearInput() {
       document.getElementById('answerNumerator').value = '';
       document.getElementById('answerDenominator').value = '';
     }
 
-    // --- ここからキャンバスの描画関連 ---
-
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
 
-    let lines = []; // 描画したすべての線の配列（線は座標の配列）
-    let currentLine = []; // 今描いている線
+    let lines = []; 
+    let currentLine = []; 
 
-    // リサイズ関数
     function resizeCanvas() {
-      // いったんサイズを変えるとキャンバスはクリアされるので
-      // サイズ変えてから、保存してある線を再描画
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       redrawLines();
     }
 
-    // 線を描き直す関数
     function redrawLines() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = '#ff69b4';
@@ -376,7 +404,6 @@
 
     let drawing = false;
 
-    // マウスイベント
     canvas.addEventListener('mousedown', (e) => {
       drawing = true;
       currentLine = [{ x: e.clientX, y: e.clientY }];
@@ -412,7 +439,6 @@
       currentLine = [];
     });
 
-    // タッチイベント
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       const touch = e.touches[0];
@@ -454,14 +480,12 @@
       currentLine = [];
     });
 
-    // リセット関数
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       lines = [];
       currentLine = [];
     }
 
-    // リセットボタン用
     function resetDrawing() {
       clearCanvas();
       clearInput();
